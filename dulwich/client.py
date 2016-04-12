@@ -41,6 +41,7 @@ __docformat__ = 'restructuredText'
 from contextlib import closing
 from io import BytesIO, BufferedReader
 import dulwich
+import os
 import select
 import socket
 import subprocess
@@ -861,12 +862,15 @@ class SSHVendor(object):
 class SubprocessSSHVendor(SSHVendor):
     """SSH vendor that shells out to the local 'ssh' command."""
 
+    def get_ssh_command(self):
+        return [os.environ.get('GIT_SSH', 'ssh'), '-x']
+
     def run_command(self, host, command, username=None, port=None):
         if not isinstance(command, bytes):
             raise TypeError(command)
 
         #FIXME: This has no way to deal with passwords..
-        args = ['ssh', '-x']
+        args = self.get_ssh_command()
         if port is not None:
             args.extend(['-p', str(port)])
         if username is not None:

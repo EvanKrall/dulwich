@@ -18,6 +18,7 @@
 
 from contextlib import closing
 from io import BytesIO
+import os
 import sys
 import shutil
 import tempfile
@@ -38,6 +39,7 @@ from dulwich.client import (
     UpdateRefsError,
     get_transport_and_path,
     get_transport_and_path_from_url,
+    SubprocessSSHVendor,
     )
 from dulwich.tests import (
     TestCase,
@@ -670,3 +672,25 @@ class LocalGitClientTests(TestCase):
         obj_local = local.get_object(new_refs[ref_name])
         obj_target = target.get_object(new_refs[ref_name])
         self.assertEqual(obj_local, obj_target)
+
+
+class TestSubprocessSSHVendor(TestCase):
+    def test_get_ssh_command_default(self):
+        old_environ = os.environ.copy()
+        try:
+            os.environ['GIT_SSH'] = "bogus_command"
+            ssh_vendor = SubprocessSSHVendor()
+            assert ssh_vendor.get_ssh_command() == ["bogus_command", "-x"]
+        finally:
+            os.environ.clear()
+            os.environ.update(old_environ)
+
+    def test_get_ssh_command_environment_override(self):
+        old_environ = os.environ.copy()
+        try:
+            os.environ['GIT_SSH'] = "bogus_command"
+            ssh_vendor = SubprocessSSHVendor()
+            assert ssh_vendor.get_ssh_command() == ["bogus_command", "-x"]
+        finally:
+            os.environ.clear()
+            os.environ.update(old_environ)
